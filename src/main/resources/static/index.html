@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time OTP Validator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --success: #10B981;
+            --error: #EF4444;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: none;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .demo-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+            animation: toastIn 0.3s ease forwards;
+            z-index: 1000;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .success-indicator {
+            color: var(--success);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .success-banner {
+            position: fixed;
+            top: -100px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to right, #10B981, #059669);
+            color: white;
+            padding: 1.2rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            z-index: 2000;
+            transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .success-banner.show {
+            top: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <div id="successBanner" class="success-banner">
+        <span>✅</span> Verification Successful! Access Granted.
+    </div>
+
+    <div class="container">
+        <h1>OTP Validator</h1>
+        <p class="subtitle">Secure real-time authentication</p>
+
+        <!-- Step 1: Send OTP -->
+        <div id="step1" class="step active">
+            <div class="input-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" placeholder="e.g., 9876543210" autocomplete="off">
+            </div>
+            <button id="sendBtn" onclick="sendOtp()">Send OTP</button>
+            <div id="sendError" class="message error"></div>
+        </div>
+
+        <!-- Step 2: Validate OTP -->
+        <div id="step2" class="step">
+            <div id="step2Success" class="success-indicator">
+                ✅ OTP sent successfully to your phone!
+            </div>
+            <div class="input-group">
+                <label for="otp">Enter OTP</label>
+                <input type="text" id="otp" placeholder="Enter 6-digit OTP" autocomplete="off" maxlength="6">
+            </div>
+            <button id="validateBtn" onclick="validateOtp()">Validate</button>
+            <div id="validationMessage" class="message"></div>
+
+            <button
+                style="background: transparent; border: 1px solid rgba(255,255,255,0.2); margin-top: 1rem; color: var(--text-muted);"
+                onclick="resetFlow()">← Back to Phone</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPhone = "";
+
+        async function sendOtp() {
+            const phoneInput = document.getElementById("phone").value.trim();
+            const errorDiv = document.getElementById("sendError");
+            const btn = document.getElementById("sendBtn");
+
+            if (!phoneInput) {
+                errorDiv.innerText = "Please enter a valid phone number.";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            errorDiv.style.display = "none";
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/otp/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phoneInput })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentPhone = phoneInput;
+
+                    // Show success on Step 2
+                    document.getElementById("step2Success").style.display = "block";
+
+                    // Switch UI
+                    document.getElementById("step1").classList.remove("active");
+                    document.getElementById("step2").classList.add("active");
+                } else {
+                    errorDiv.innerText = data.message || "Failed to send OTP.";
+                    errorDiv.style.display = "block";
+                }
+            } catch (err) {
+                errorDiv.innerText = "Error connecting to server.";
+                errorDiv.style.display = "block";
+            } finally {
+                btn.innerText = "Send OTP";
+                btn.disabled = false;
+            }
+        }
+
+        async function validateOtp() {
+            const otpInput = document.getElementById("otp").value.trim();
+            const msgDiv = document.getElementById("validationMessage");
+            const btn = document.getElementById("validateBtn");
+
+            msgDiv.style.display = "none";
+            msgDiv.className = "message"; // reset classes
+
+            if (!otpInput) {
+                msgDiv.innerText = "Please enter the OTP.";
+                msgDiv.classList.add("error");
+                msgDiv.style.display = "block";
+                return;
+            }
+
+            btn.innerText = "Validating...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/otp/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentPhone, otp: otpInput })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    msgDiv.innerText = data.message;
+                    msgDiv.classList.add("success");
+                    msgDiv.style.display = "block";
+                    document.getElementById("step2Success").style.display = "none";
+
+                    // Show Banner
+                    const banner = document.getElementById("successBanner");
+                    banner.classList.add("show");
+
+                    // Optional: reset after success
+                    setTimeout(() => {
+                        banner.classList.remove("show");
+                        resetFlow();
+                    }, 4000);
+                } else {
+                    msgDiv.innerText = data.message;
+                    msgDiv.classList.add("error");
+                    msgDiv.style.display = "block";
+                }
+            } catch (err) {
+                msgDiv.innerText = "Error connecting to server.";
+                msgDiv.classList.add("error");
+                msgDiv.style.display = "block";
+            } finally {
+                btn.innerText = "Validate";
+                btn.disabled = false;
+            }
+        }
+
+        function resetFlow() {
+            currentPhone = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("otp").value = "";
+            document.getElementById("validationMessage").style.display = "none";
+            document.getElementById("sendError").style.display = "none";
+
+            document.getElementById("step2Success").style.display = "none";
+            document.getElementById("step2").classList.remove("active");
+            document.getElementById("step1").classList.add("active");
+        }
+    </script>
+</body>
+
+</html>
